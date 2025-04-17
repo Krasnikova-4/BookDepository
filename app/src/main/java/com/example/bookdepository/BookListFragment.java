@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -32,13 +33,14 @@ public class BookListFragment extends Fragment {
        mBookRecyclerView.setAdapter(mAdapter);
    }
 
-    private class BookHolder extends RecyclerView.ViewHolder {
+    private class BookHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
        private Book mBook;
        private TextView mTitleTextView;
         private TextView mDateTextView;
         private CheckBox mReadedCheckBox;
        public BookHolder(View itemView) {
            super(itemView);
+           itemView.setOnClickListener(this);
            mTitleTextView = (TextView)
                    itemView.findViewById(R.id.list_item_book_title_text_view);
            mDateTextView = (TextView)
@@ -51,6 +53,12 @@ public class BookListFragment extends Fragment {
             mTitleTextView.setText(mBook.getTitle());
             mDateTextView.setText(mBook.getDate().toString());
             mReadedCheckBox.setChecked(mBook.isReaded());
+        }
+        @Override
+        public void onClick(View v) {
+            Toast.makeText(getActivity(),
+                            mBook.getTitle() + " clicked!", Toast.LENGTH_SHORT)
+                    .show();
         }
    }
    private class BookAdapter extends RecyclerView.Adapter<BookHolder> {
