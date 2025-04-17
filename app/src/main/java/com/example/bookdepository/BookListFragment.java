@@ -1,5 +1,6 @@
 package com.example.bookdepository;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,11 +27,20 @@ public class BookListFragment extends Fragment {
        updateUI();
        return view;
    }
+    @Override
+    public void onResume(){
+       super.onResume();
+       updateUI();
+    }
    private void updateUI() {
        BookLab bookLab = BookLab.get(getActivity());
        List<Book> books = bookLab.getBooks();
-       mAdapter = new BookAdapter(books);
-       mBookRecyclerView.setAdapter(mAdapter);
+       if (mAdapter == null) {
+           mAdapter = new BookAdapter(books);
+           mBookRecyclerView.setAdapter(mAdapter);
+       } else {
+           mAdapter.notifyDataSetChanged();
+       }
    }
 
     private class BookHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -56,9 +66,9 @@ public class BookListFragment extends Fragment {
         }
         @Override
         public void onClick(View v) {
-            Toast.makeText(getActivity(),
-                            mBook.getTitle() + " clicked!", Toast.LENGTH_SHORT)
-                    .show();
+            Intent intent = BookActivity.newIntent(getActivity(),
+                    mBook.getId());
+            startActivity(intent);
         }
    }
    private class BookAdapter extends RecyclerView.Adapter<BookHolder> {
@@ -66,6 +76,7 @@ public class BookListFragment extends Fragment {
        public BookAdapter(List<Book> books) {
            mBooks = books;
        }
+
        @Override
        public BookHolder onCreateViewHolder(ViewGroup parent, int viewType)
        {
