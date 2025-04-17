@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "BookDepository"
 include(":app")
-include(":mylibrary")

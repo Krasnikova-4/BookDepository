@@ -12,9 +12,9 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 
 public class BookActivity extends SingleFragmentActivity {
+
     @Override
     protected Fragment createFragment() {
         return new BookFragment();
     }
-
 }

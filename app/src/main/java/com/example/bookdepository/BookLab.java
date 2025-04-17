@@ -24,6 +24,9 @@ public class BookLab {
             mBooks.add(book);
         }
     }
+    public List<Book> getBooks() {
+        return mBooks;
+    }
     public Book getBook(UUID id) {
         for (Book book : mBooks) {
             if (book.getId().equals(id)) {
