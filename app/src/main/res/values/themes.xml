@@ -6,4 +6,7 @@
     </style>
 
     <style name="Theme.BookDepository" parent="Base.Theme.BookDepository" />
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Другие атрибуты темы -->
+    </style>
 </resources>
