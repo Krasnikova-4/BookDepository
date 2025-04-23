@@ -42,6 +42,11 @@ public class BookFragment extends Fragment {
         mBook = BookLab.get(getActivity()).getBook(bookId);
     }
     @Override
+    public void onPause() {
+        super.onPause();
+        BookLab.get(getActivity()).updateBook(mBook);
+    }
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup
             container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_book, container,
