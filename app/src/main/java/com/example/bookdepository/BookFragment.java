@@ -2,6 +2,7 @@ package com.example.bookdepository;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.icu.text.DateFormat;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,6 +29,7 @@ public class BookFragment extends Fragment {
     private EditText mTitleField;
     private Button mDateButton;
     private CheckBox mReadedCheckBox;
+    private Button mReportButton;
     public static BookFragment newInstance(UUID bookId) {
         Bundle args = new Bundle();
         args.putSerializable(ARG_BOOK_ID, bookId);
@@ -93,6 +95,18 @@ public class BookFragment extends Fragment {
                     mBook.setReaded(isChecked);
              }
       });
+        mReportButton = (Button)v.findViewById(R.id.book_report);
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getBookReport());
+                i.putExtra(Intent.EXTRA_SUBJECT,
+                        getString(R.string.book_report_subject));
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
         return v;
     }
     @Override
@@ -112,5 +126,19 @@ public class BookFragment extends Fragment {
     }
     private void updateDate() {
         mDateButton.setText(mBook.getDate().toString());
+    }
+    private String getBookReport() {
+        String readedString = null;
+        if (mBook.isReaded()){
+            readedString = getString(R.string.book_report_readed);
+        }else {
+            readedString = getString(R.string.book_report_unreaded);
+        }
+        String dateFormat = "EEE, MMM dd";
+        String dateString = DateFormat
+                .getDateInstance(DateFormat.MEDIUM).format(mBook.getDate());
+        String report = getString(R.string.book_report,
+                mBook.getTitle(), dateString, readedString);
+        return report;
     }
 }
