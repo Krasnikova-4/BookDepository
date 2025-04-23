@@ -2,8 +2,13 @@ package com.example.bookdepository;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.icu.text.DateFormat;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -13,11 +18,15 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 
 
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import java.io.File;
 import java.util.Date;
 import java.util.UUID;
 
@@ -25,11 +34,15 @@ public class BookFragment extends Fragment {
     private static final String ARG_BOOK_ID = "book_id";
     private static final String DIALOG_DATE = "DialogDate";
     private static final int REQUEST_DATE = 0;
+    private static final int REQUEST_PHOTO = 1;
     private Book mBook;
     private EditText mTitleField;
     private Button mDateButton;
     private CheckBox mReadedCheckBox;
     private Button mReportButton;
+    private File mPhotoFile;
+    private ImageButton mPhotoButton;
+    private ImageView mPhotoView;
     public static BookFragment newInstance(UUID bookId) {
         Bundle args = new Bundle();
         args.putSerializable(ARG_BOOK_ID, bookId);
@@ -42,6 +55,7 @@ public class BookFragment extends Fragment {
         super.onCreate(savedInstanceState);
         UUID bookId = (UUID) getArguments().getSerializable(ARG_BOOK_ID);
         mBook = BookLab.get(getActivity()).getBook(bookId);
+        mPhotoFile = BookLab.get(getActivity()).getPhotoFile(mBook);
     }
     @Override
     public void onPause() {
@@ -53,7 +67,7 @@ public class BookFragment extends Fragment {
             container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_book, container,
                 false);
-        mTitleField = (EditText)v.findViewById(R.id.book_title);
+        mTitleField = (EditText) v.findViewById(R.id.book_title);
         mTitleField.setText(mBook.getTitle());
         mTitleField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -61,11 +75,13 @@ public class BookFragment extends Fragment {
                     CharSequence s, int start, int count, int after) {
 // Здесь намеренно оставлено пустое место
             }
+
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
                 mBook.setTitle(s.toString());
             }
+
             @Override
             public void afterTextChanged(Editable c) {
 // И здесь тоже
@@ -87,15 +103,15 @@ public class BookFragment extends Fragment {
         mReadedCheckBox = (CheckBox) v.findViewById(R.id.book_readed);
         mReadedCheckBox.setChecked(mBook.isReaded());
         mReadedCheckBox.setOnCheckedChangeListener(new
-        CompoundButton.OnCheckedChangeListener() {
+                                                           CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean
                     isChecked) {
 
-                    mBook.setReaded(isChecked);
-             }
-      });
-        mReportButton = (Button)v.findViewById(R.id.book_report);
+                mBook.setReaded(isChecked);
+            }
+        });
+        mReportButton = (Button) v.findViewById(R.id.book_report);
         mReportButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_SEND);
@@ -107,6 +123,37 @@ public class BookFragment extends Fragment {
                 startActivity(i);
             }
         });
+
+        mPhotoButton = (ImageButton) v.findViewById(R.id.book_camera);
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        PackageManager packageManager = getActivity().getPackageManager();
+        boolean canTakePhoto = mPhotoFile != null &&
+                captureImage.resolveActivity(packageManager) != null;
+
+        if (canTakePhoto) {
+            Uri uri;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                uri = Uri.fromFile(mPhotoFile);
+            } else {
+                uri = FileProvider.getUriForFile(
+                        getActivity(),
+                        getActivity().getPackageName() + ".provider",  // или BuildConfig.APPLICATION_ID
+                        mPhotoFile
+                );
+            }
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            captureImage.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);  // Добавьте это для API 24+
+
+            mPhotoButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivityForResult(captureImage, REQUEST_PHOTO);
+                }
+            });
+
+            mPhotoView = (ImageView) v.findViewById(R.id.book_photo);
+            updatePhotoView();
+        }
         return v;
     }
     @Override
@@ -122,6 +169,8 @@ public class BookFragment extends Fragment {
             mBook.setDate(date);
             updateDate();
             mDateButton.setText(mBook.getDate().toString());
+        }else if (requestCode == REQUEST_PHOTO) {
+            updatePhotoView();
         }
     }
     private void updateDate() {
@@ -140,5 +189,15 @@ public class BookFragment extends Fragment {
         String report = getString(R.string.book_report,
                 mBook.getTitle(), dateString, readedString);
         return report;
+    }
+    private void updatePhotoView() {
+        if (mPhotoFile == null || !mPhotoFile.exists()) {
+            mPhotoView.setImageDrawable(null);
+        } else {
+
+            Bitmap bitmap = PictureUtils.getScaledBitmap(
+                    mPhotoFile.getPath(), getActivity());
+            mPhotoView.setImageBitmap(bitmap);
+        }
     }
 }

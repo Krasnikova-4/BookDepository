@@ -4,11 +4,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.example.bookdepository.database.BookBaseHelper;
 import com.example.bookdepository.database.BookCursorWrapper;
 import com.example.bookdepository.database.BookDbSchema;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -53,6 +55,7 @@ public class BookLab {
                 BookDbSchema.BookTable.Cols.UUID + " = ?",
                 new String[] { id.toString() }
         );
+
         try {
             if (cursor.getCount() == 0) {
                 return null;
@@ -62,6 +65,14 @@ public class BookLab {
         } finally {
             cursor.close();
         }
+    }
+    public File getPhotoFile(Book book) {
+        File externalFilesDir = mContext
+                .getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (externalFilesDir == null) {
+            return null;
+        }
+        return new File(externalFilesDir, book.getPhotoFilename());
     }
     public void updateBook(Book book) {
         String uuidString = book.getId().toString();
